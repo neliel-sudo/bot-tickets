@@ -189,7 +189,7 @@ Selecciona el ticket que deseas abrir.
 
         if (opcion === 'eventos') {
 
-            const nombreTicket = `eventos-${String(contadorEventos).padStart(4, '0')}`;
+            const nombreTicket = `🎈┊eventos-${String(contadorEventos).padStart(4, '0')}`;
 
             canal = await interaction.guild.channels.create({
                 name: nombreTicket,
@@ -242,7 +242,7 @@ Este ticket es para:
 
         if (opcion === 'sugerencias') {
 
-            const nombreTicket = `sugerencias-${String(contadorSugerencias).padStart(4, '0')}`;
+            const nombreTicket = `📢┊sugerencias-${String(contadorSugerencias).padStart(4, '0')}`;
 
             canal = await interaction.guild.channels.create({
                 name: nombreTicket,
@@ -388,11 +388,16 @@ Este ticket es para:
             ========================= */
 
             await interaction.channel.permissionOverwrites.edit(interaction.user.id, {
-                ViewChannel: false
+                ViewChannel: false,
+                SendMessages: false
+            });
+
+            await interaction.channel.send({
+                content: `🔒 El usuario ${interaction.user} ha cerrado el ticket.\nEl staff aún puede verlo y eliminarlo cuando termine.`
             });
 
             return interaction.update({
-                content: '🔒 Has cerrado tu ticket.',
+                content: '✅ Has cerrado tu ticket correctamente.',
                 components: []
             });
         }

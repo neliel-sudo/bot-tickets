@@ -25,11 +25,14 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 // ==========================
-// CHECK VARIABLES
+// CHECK VARIABLES (IMPORTANTE)
 // ==========================
 
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
-    console.log('❌ Faltan variables en Railway (TOKEN / CLIENT_ID / GUILD_ID)');
+    console.log('❌ FALTAN VARIABLES DE ENTORNO');
+    console.log('TOKEN:', !!TOKEN);
+    console.log('CLIENT_ID:', CLIENT_ID);
+    console.log('GUILD_ID:', GUILD_ID);
     process.exit(1);
 }
 
@@ -62,6 +65,10 @@ const commands = [
         .toJSON()
 ];
 
+// ==========================
+// REST (COMANDOS)
+// ==========================
+
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
@@ -84,7 +91,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 // ==========================
 
 client.once(Events.ClientReady, () => {
-    console.log(`✅ Conectado como ${client.user.tag}`);
+    console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
 
 // ==========================

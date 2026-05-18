@@ -17,7 +17,7 @@ const {
 } = require('discord.js');
 
 // ==========================
-// VARIABLES ENV
+// VARIABLES
 // ==========================
 
 const TOKEN = process.env.TOKEN;
@@ -25,20 +25,16 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 // ==========================
-// VERIFICACIÓN VARIABLES
+// CHECK VARIABLES
 // ==========================
 
-console.log('TOKEN:', TOKEN ? '✅ Detectado' : '❌ No detectado');
-console.log('CLIENT_ID:', CLIENT_ID || '❌ No detectado');
-console.log('GUILD_ID:', GUILD_ID || '❌ No detectado');
-
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
-    console.log('❌ Faltan variables en Railway.');
+    console.log('❌ Faltan variables en Railway (TOKEN / CLIENT_ID / GUILD_ID)');
     process.exit(1);
 }
 
 // ==========================
-// CLIENTE
+// CLIENT
 // ==========================
 
 const client = new Client({
@@ -46,61 +42,41 @@ const client = new Client({
 });
 
 // ==========================
-// ROLES STAFF
+// STAFF & CATEGORIES
 // ==========================
 
 const STAFF_EVENTOS = '1435353402002374745';
 const STAFF_SUGERENCIAS = '1435353402002374745';
 
-// ==========================
-// CATEGORÍAS
-// ==========================
-
 const CATEGORIA_EVENTOS = '1505945637513068574';
 const CATEGORIA_SUGERENCIAS = '1505945637513068574';
 
 // ==========================
-// SLASH COMMANDS
+// SLASH COMMAND
 // ==========================
 
 const commands = [
     new SlashCommandBuilder()
         .setName('panel')
-        .setDescription('Enviar panel de tickets')
+        .setDescription('Abrir panel de tickets')
         .toJSON()
 ];
-
-// ==========================
-// REGISTRO COMANDOS
-// ==========================
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
-
     try {
-
-        console.log('🔄 Registrando slash commands...');
+        console.log('🔄 Registrando comandos...');
 
         await rest.put(
-            Routes.applicationGuildCommands(
-                CLIENT_ID,
-                GUILD_ID
-            ),
-            {
-                body: commands
-            }
+            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            { body: commands }
         );
 
-        console.log('✅ Slash command registrado.');
-
-    } catch (error) {
-
-        console.error('❌ Error registrando comandos:');
-        console.error(error);
-
+        console.log('✅ Comandos registrados');
+    } catch (err) {
+        console.error('❌ Error registrando comandos:', err);
     }
-
 })();
 
 // ==========================
@@ -108,20 +84,18 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 // ==========================
 
 client.once(Events.ClientReady, () => {
-
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
-
+    console.log(`✅ Conectado como ${client.user.tag}`);
 });
 
 // ==========================
 // INTERACCIONES
 // ==========================
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
 
-    // ==========================
-    // COMANDO /panel
-    // ==========================
+    // --------------------------
+    // /panel
+    // --------------------------
 
     if (interaction.isChatInputCommand()) {
 
@@ -129,85 +103,58 @@ client.on(Events.InteractionCreate, async interaction => {
 
             const embed = new EmbedBuilder()
                 .setColor('#2b2d31')
-                .setTitle('🎫 TICKETS LSC')
-                .setDescription(`
-> Selecciona una opción del menú desplegable para abrir un ticket.
-
-━━━━━━━━━━━━━━━━━━
-
-🎈 **Eventos**  
-> Abrir ticket relacionado con eventos.
-
-📢 **Sugerencias**  
-> Enviar sugerencias o feedback.
-
-━━━━━━━━━━━━━━━━━━
-                `)
-                .setThumbnail(interaction.guild.iconURL())
-                .setFooter({
-                    text: 'LSC • Sistema de Tickets'
-                })
-                .setTimestamp();
+                .setTitle('🎫 TICKETS')
+                .setDescription('Selecciona una opción para abrir un ticket');
 
             const menu = new StringSelectMenuBuilder()
-                .setCustomId('tickets_menu')
-                .setPlaceholder('Haz una selección')
+                .setCustomId('menu_tickets')
+                .setPlaceholder('Selecciona una opción')
                 .addOptions([
                     {
                         label: 'Eventos',
-                        description: 'Abrir ticket de eventos',
                         value: 'eventos',
                         emoji: '🎈'
                     },
                     {
                         label: 'Sugerencias',
-                        description: 'Enviar sugerencias',
                         value: 'sugerencias',
                         emoji: '📢'
                     }
                 ]);
 
-            const row = new ActionRowBuilder()
-                .addComponents(menu);
-
             await interaction.reply({
                 embeds: [embed],
-                components: [row]
+                components: [new ActionRowBuilder().addComponents(menu)]
             });
         }
     }
 
-    // ==========================
-    // MENÚ TICKETS
-    // ==========================
+    // --------------------------
+    // MENU
+    // --------------------------
 
     if (interaction.isStringSelectMenu()) {
 
         const opcion = interaction.values[0];
 
-        const cerrar = new ButtonBuilder()
-            .setCustomId('cerrar_ticket')
-            .setLabel('Cerrar Ticket')
-            .setEmoji('🔒')
+        const botonCerrar = new ButtonBuilder()
+            .setCustomId('cerrar')
+            .setLabel('Cerrar ticket')
             .setStyle(ButtonStyle.Danger);
 
-        const botones = new ActionRowBuilder()
-            .addComponents(cerrar);
+        const row = new ActionRowBuilder().addComponents(botonCerrar);
 
-        // ==========================
-        // EVENTOS
-        // ==========================
+        let canal;
 
         if (opcion === 'eventos') {
 
-            const canal = await interaction.guild.channels.create({
+            canal = await interaction.guild.channels.create({
                 name: `🎈-${interaction.user.username}`,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_EVENTOS,
-
                 permissionOverwrites: [
                     {
-                        id: interaction.guild.roles.everyone,
+                        id: interaction.guild.roles.everyone.id,
                         deny: [PermissionsBitField.Flags.ViewChannel]
                     },
                     {
@@ -227,46 +174,17 @@ client.on(Events.InteractionCreate, async interaction => {
                 ]
             });
 
-            const embedEvento = new EmbedBuilder()
-                .setColor('#5865F2')
-                .setTitle('🎈 Ticket de Eventos')
-                .setDescription(`
-Hola ${interaction.user}
-
-Gracias por abrir un ticket de eventos.
-
-Un miembro del staff te atenderá pronto.
-                `)
-                .setFooter({
-                    text: 'LSC • Eventos'
-                })
-                .setTimestamp();
-
-            await canal.send({
-                embeds: [embedEvento],
-                components: [botones]
-            });
-
-            await interaction.reply({
-                content: `✅ Ticket creado: ${canal}`,
-                ephemeral: true
-            });
         }
-
-        // ==========================
-        // SUGERENCIAS
-        // ==========================
 
         if (opcion === 'sugerencias') {
 
-            const canal = await interaction.guild.channels.create({
+            canal = await interaction.guild.channels.create({
                 name: `📢-${interaction.user.username}`,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_SUGERENCIAS,
-
                 permissionOverwrites: [
                     {
-                        id: interaction.guild.roles.everyone,
+                        id: interaction.guild.roles.everyone.id,
                         deny: [PermissionsBitField.Flags.ViewChannel]
                     },
                     {
@@ -285,23 +203,12 @@ Un miembro del staff te atenderá pronto.
                     }
                 ]
             });
+        }
 
-            const embedSug = new EmbedBuilder()
-                .setColor('#57F287')
-                .setTitle('📢 Ticket de Sugerencias')
-                .setDescription(`
-Hola ${interaction.user}
-
-Gracias por enviarnos tu sugerencia.
-                `)
-                .setFooter({
-                    text: 'LSC • Sugerencias'
-                })
-                .setTimestamp();
-
+        if (canal) {
             await canal.send({
-                embeds: [embedSug],
-                components: [botones]
+                content: `Ticket creado por ${interaction.user}`,
+                components: [row]
             });
 
             await interaction.reply({
@@ -311,31 +218,21 @@ Gracias por enviarnos tu sugerencia.
         }
     }
 
-    // ==========================
+    // --------------------------
     // BOTÓN CERRAR
-    // ==========================
+    // --------------------------
 
     if (interaction.isButton()) {
 
-        if (interaction.customId === 'cerrar_ticket') {
+        if (interaction.customId === 'cerrar') {
 
             await interaction.reply({
-                content: '🔒 Cerrando ticket en 5 segundos...'
+                content: '🔒 Cerrando ticket...'
             });
 
-            setTimeout(async () => {
-
-                try {
-
-                    await interaction.channel.delete();
-
-                } catch (error) {
-
-                    console.error(error);
-
-                }
-
-            }, 5000);
+            setTimeout(() => {
+                interaction.channel.delete().catch(() => {});
+            }, 3000);
         }
     }
 });

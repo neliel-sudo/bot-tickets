@@ -34,8 +34,8 @@ const GUILD_ID = 'TU_SERVER_ID';
 // ROLES STAFF
 // ==========================
 
-const STAFF_EVENTOS = 'ID_ROL_EVENTOS';
-const STAFF_SUGERENCIAS = 'ID_ROL_SUGERENCIAS';
+const STAFF_EVENTOS = 'I1435353402002374745';
+const STAFF_SUGERENCIAS = '1435353402002374745';
 
 // ==========================
 // CATEGORÍAS

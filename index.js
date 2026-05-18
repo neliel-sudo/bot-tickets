@@ -26,9 +26,9 @@ const client = new Client({
 // CONFIGURACIÓN
 // ==========================
 
-const TOKEN = 'TU_TOKEN';
-const CLIENT_ID = 'TU_CLIENT_ID';
-const GUILD_ID = 'TU_SERVER_ID';
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+const GUILD_ID = process.env.GUILD_ID;
 
 // ==========================
 // ROLES STAFF

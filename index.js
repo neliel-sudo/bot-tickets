@@ -17,14 +17,6 @@ const {
 } = require('discord.js');
 
 // ==========================
-// CLIENTE
-// ==========================
-
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
-});
-
-// ==========================
 // VARIABLES ENV
 // ==========================
 
@@ -36,10 +28,22 @@ const GUILD_ID = process.env.GUILD_ID;
 // VERIFICACIÓN VARIABLES
 // ==========================
 
+console.log('TOKEN:', TOKEN ? '✅ Detectado' : '❌ No detectado');
+console.log('CLIENT_ID:', CLIENT_ID || '❌ No detectado');
+console.log('GUILD_ID:', GUILD_ID || '❌ No detectado');
+
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
-    console.log('❌ Faltan variables en el .env');
+    console.log('❌ Faltan variables en Railway.');
     process.exit(1);
 }
+
+// ==========================
+// CLIENTE
+// ==========================
+
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds]
+});
 
 // ==========================
 // ROLES STAFF
@@ -67,12 +71,13 @@ const commands = [
 ];
 
 // ==========================
-// REGISTRO SLASH COMMANDS
+// REGISTRO COMANDOS
 // ==========================
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
+
     try {
 
         console.log('🔄 Registrando slash commands...');
@@ -90,8 +95,12 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
         console.log('✅ Slash command registrado.');
 
     } catch (error) {
-        console.error('❌ Error registrando comandos:', error);
+
+        console.error('❌ Error registrando comandos:');
+        console.error(error);
+
     }
+
 })();
 
 // ==========================
@@ -99,7 +108,9 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 // ==========================
 
 client.once(Events.ClientReady, () => {
+
     console.log(`✅ Bot conectado como ${client.user.tag}`);
+
 });
 
 // ==========================
@@ -109,7 +120,7 @@ client.once(Events.ClientReady, () => {
 client.on(Events.InteractionCreate, async interaction => {
 
     // ==========================
-    // /panel
+    // COMANDO /panel
     // ==========================
 
     if (interaction.isChatInputCommand()) {
@@ -167,7 +178,7 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     // ==========================
-    // SELECT MENU
+    // MENÚ TICKETS
     // ==========================
 
     if (interaction.isStringSelectMenu()) {
@@ -315,9 +326,13 @@ Gracias por enviarnos tu sugerencia.
             setTimeout(async () => {
 
                 try {
+
                     await interaction.channel.delete();
+
                 } catch (error) {
+
                     console.error(error);
+
                 }
 
             }, 5000);

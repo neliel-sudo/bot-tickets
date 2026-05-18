@@ -23,7 +23,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 /* =========================
-   DEBUG (IMPORTANTE)
+   DEBUG
 ========================= */
 
 console.log('--- DEBUG VARIABLES ---');
@@ -73,7 +73,9 @@ const commands = [
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
+
     try {
+
         console.log('🔄 Registrando comandos...');
 
         await rest.put(
@@ -82,9 +84,13 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
         );
 
         console.log('✅ Comandos registrados');
+
     } catch (err) {
+
         console.error('❌ ERROR registrando comandos:', err);
+
     }
+
 })();
 
 /* =========================
@@ -92,7 +98,9 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 ========================= */
 
 client.once(Events.ClientReady, () => {
+
     console.log(`✅ Bot conectado como ${client.user.tag}`);
+
 });
 
 /* =========================
@@ -101,50 +109,82 @@ client.once(Events.ClientReady, () => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
 
-    // /panel
+    /* =========================
+       COMANDO /panel
+    ========================= */
+
     if (interaction.isChatInputCommand()) {
 
         if (interaction.commandName === 'panel') {
 
             const embed = new EmbedBuilder()
                 .setColor('#2b2d31')
-                .setTitle('🎫 TICKETS')
-                .setDescription('Selecciona una opción');
+                .setTitle('🎫┊Sistema de Tickets')
+                .setDescription(`
+Selecciona el ticket que deseas abrir.
+
+🎈┊Eventos
+📢┊Sugerencias
+                `)
+                .setFooter({ text: 'LSC Tickets System' })
+                .setTimestamp();
 
             const menu = new StringSelectMenuBuilder()
                 .setCustomId('menu_tickets')
-                .setPlaceholder('Selecciona una opción')
+                .setPlaceholder('🎫┊Selecciona un ticket')
                 .addOptions([
-                    { label: 'Eventos', value: 'eventos', emoji: '🎈' },
-                    { label: 'Sugerencias', value: 'sugerencias', emoji: '📢' }
+                    {
+                        label: '🎈┊Eventos',
+                        value: 'eventos',
+                        description: 'Soporte relacionado con eventos'
+                    },
+                    {
+                        label: '📢┊Sugerencias',
+                        value: 'sugerencias',
+                        description: 'Ideas y opiniones'
+                    }
                 ]);
+
+            const row = new ActionRowBuilder().addComponents(menu);
 
             return interaction.reply({
                 embeds: [embed],
-                components: [new ActionRowBuilder().addComponents(menu)]
+                components: [row]
             });
         }
     }
 
-    // MENÚ
+    /* =========================
+       MENÚ TICKETS
+    ========================= */
+
     if (interaction.isStringSelectMenu()) {
+
+        if (interaction.customId !== 'menu_tickets') return;
 
         const opcion = interaction.values[0];
 
-        const boton = new ButtonBuilder()
+        const botonCerrar = new ButtonBuilder()
             .setCustomId('cerrar')
-            .setLabel('Cerrar ticket')
+            .setLabel('🔒┊Cerrar Ticket')
             .setStyle(ButtonStyle.Danger);
 
-        const row = new ActionRowBuilder().addComponents(boton);
+        const rowBoton = new ActionRowBuilder().addComponents(botonCerrar);
 
         let canal;
+        let ticketEmbed;
+
+        /* =========================
+           🎈 EVENTOS
+        ========================= */
 
         if (opcion === 'eventos') {
+
             canal = await interaction.guild.channels.create({
-                name: `🎈-${interaction.user.username}`,
+                name: `🎈┊${interaction.user.username}`,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_EVENTOS,
+
                 permissionOverwrites: [
                     {
                         id: interaction.guild.roles.everyone.id,
@@ -166,13 +206,34 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     }
                 ]
             });
+
+            ticketEmbed = new EmbedBuilder()
+                .setColor('#ff69b4')
+                .setTitle('🎈┊Ticket de Eventos')
+                .setDescription(`
+Bienvenido ${interaction.user}
+
+Este ticket es para:
+
+🎈┊Eventos para realizar
+🎈┊Participaciones
+🎈┊Consultas generales
+                `)
+                .setFooter({ text: 'LSC Tickets System' })
+                .setTimestamp();
         }
 
+        /* =========================
+           📢 SUGERENCIAS
+        ========================= */
+
         if (opcion === 'sugerencias') {
+
             canal = await interaction.guild.channels.create({
-                name: `📢-${interaction.user.username}`,
+                name: `📢┊${interaction.user.username}`,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_SUGERENCIAS,
+
                 permissionOverwrites: [
                     {
                         id: interaction.guild.roles.everyone.id,
@@ -194,30 +255,57 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     }
                 ]
             });
+
+            ticketEmbed = new EmbedBuilder()
+                .setColor('#00b0f4')
+                .setTitle('📢┊Ticket de Sugerencias')
+                .setDescription(`
+Bienvenido ${interaction.user}
+
+Este ticket es para:
+
+📢┊Ideas nuevas
+📢┊Opiniones
+                `)
+                .setFooter({ text: 'LSC Tickets System' })
+                .setTimestamp();
         }
 
+        /* =========================
+           ENVIAR MENSAJE
+        ========================= */
+
         if (canal) {
+
             await canal.send({
-                content: `Ticket creado por ${interaction.user}`,
-                components: [row]
+                content: `${interaction.user}`,
+                embeds: [ticketEmbed],
+                components: [rowBoton]
             });
 
             return interaction.reply({
-                content: `✅ Ticket creado: ${canal}`,
+                content: `✅┊Tu ticket fue creado correctamente: ${canal}`,
                 ephemeral: true
             });
         }
     }
 
-    // BOTÓN
+    /* =========================
+       BOTÓN CERRAR
+    ========================= */
+
     if (interaction.isButton()) {
 
         if (interaction.customId === 'cerrar') {
 
-            await interaction.reply('🔒 Cerrando ticket...');
+            await interaction.reply({
+                content: '🔒┊Cerrando ticket en 3 segundos...'
+            });
 
             setTimeout(() => {
+
                 interaction.channel.delete().catch(() => {});
+
             }, 3000);
         }
     }

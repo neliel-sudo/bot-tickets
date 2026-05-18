@@ -25,14 +25,18 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
 // ==========================
-// CHECK VARIABLES (IMPORTANTE)
+// DEBUG CRÍTICO (NO BORRAR)
 // ==========================
 
+console.log('--- DEBUG VARIABLES ---');
+console.log('TOKEN existe:', !!TOKEN);
+console.log('CLIENT_ID:', CLIENT_ID);
+console.log('GUILD_ID:', GUILD_ID);
+console.log('-----------------------');
+
+// Si algo falla, paramos aquí
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
-    console.log('❌ FALTAN VARIABLES DE ENTORNO');
-    console.log('TOKEN:', !!TOKEN);
-    console.log('CLIENT_ID:', CLIENT_ID);
-    console.log('GUILD_ID:', GUILD_ID);
+    console.log('❌ ERROR: faltan variables de entorno');
     process.exit(1);
 }
 
@@ -45,7 +49,7 @@ const client = new Client({
 });
 
 // ==========================
-// STAFF & CATEGORIES
+// CONFIG
 // ==========================
 
 const STAFF_EVENTOS = '1435353402002374745';
@@ -55,7 +59,7 @@ const CATEGORIA_EVENTOS = '1505945637513068574';
 const CATEGORIA_SUGERENCIAS = '1505945637513068574';
 
 // ==========================
-// SLASH COMMAND
+// SLASH COMMANDS
 // ==========================
 
 const commands = [
@@ -66,7 +70,7 @@ const commands = [
 ];
 
 // ==========================
-// REST (COMANDOS)
+// REST (REGISTRO COMANDOS)
 // ==========================
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -82,7 +86,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 
         console.log('✅ Comandos registrados');
     } catch (err) {
-        console.error('❌ Error registrando comandos:', err);
+        console.error('❌ ERROR registrando comandos:', err);
     }
 })();
 
@@ -100,10 +104,7 @@ client.once(Events.ClientReady, () => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
 
-    // --------------------------
     // /panel
-    // --------------------------
-
     if (interaction.isChatInputCommand()) {
 
         if (interaction.commandName === 'panel') {
@@ -111,50 +112,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const embed = new EmbedBuilder()
                 .setColor('#2b2d31')
                 .setTitle('🎫 TICKETS')
-                .setDescription('Selecciona una opción para abrir un ticket');
+                .setDescription('Selecciona una opción');
 
             const menu = new StringSelectMenuBuilder()
                 .setCustomId('menu_tickets')
                 .setPlaceholder('Selecciona una opción')
                 .addOptions([
-                    {
-                        label: 'Eventos',
-                        value: 'eventos',
-                        emoji: '🎈'
-                    },
-                    {
-                        label: 'Sugerencias',
-                        value: 'sugerencias',
-                        emoji: '📢'
-                    }
+                    { label: 'Eventos', value: 'eventos', emoji: '🎈' },
+                    { label: 'Sugerencias', value: 'sugerencias', emoji: '📢' }
                 ]);
 
-            await interaction.reply({
+            return interaction.reply({
                 embeds: [embed],
                 components: [new ActionRowBuilder().addComponents(menu)]
             });
         }
     }
 
-    // --------------------------
-    // MENU
-    // --------------------------
-
+    // MENÚ
     if (interaction.isStringSelectMenu()) {
 
         const opcion = interaction.values[0];
 
-        const botonCerrar = new ButtonBuilder()
+        const boton = new ButtonBuilder()
             .setCustomId('cerrar')
             .setLabel('Cerrar ticket')
             .setStyle(ButtonStyle.Danger);
 
-        const row = new ActionRowBuilder().addComponents(botonCerrar);
+        const row = new ActionRowBuilder().addComponents(boton);
 
         let canal;
 
         if (opcion === 'eventos') {
-
             canal = await interaction.guild.channels.create({
                 name: `🎈-${interaction.user.username}`,
                 type: ChannelType.GuildText,
@@ -180,11 +169,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     }
                 ]
             });
-
         }
 
         if (opcion === 'sugerencias') {
-
             canal = await interaction.guild.channels.create({
                 name: `📢-${interaction.user.username}`,
                 type: ChannelType.GuildText,
@@ -218,24 +205,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 components: [row]
             });
 
-            await interaction.reply({
+            return interaction.reply({
                 content: `✅ Ticket creado: ${canal}`,
                 ephemeral: true
             });
         }
     }
 
-    // --------------------------
-    // BOTÓN CERRAR
-    // --------------------------
-
+    // BOTÓN
     if (interaction.isButton()) {
 
         if (interaction.customId === 'cerrar') {
 
-            await interaction.reply({
-                content: '🔒 Cerrando ticket...'
-            });
+            await interaction.reply('🔒 Cerrando ticket...');
 
             setTimeout(() => {
                 interaction.channel.delete().catch(() => {});

@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const {
     Client,
     GatewayIntentBits,
@@ -16,17 +14,17 @@ const {
     Routes
 } = require('discord.js');
 
-// ==========================
-// VARIABLES
-// ==========================
+/* =========================
+   VARIABLES (RAILWAY)
+========================= */
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
-// ==========================
-// DEBUG CRÍTICO (NO BORRAR)
-// ==========================
+/* =========================
+   DEBUG (IMPORTANTE)
+========================= */
 
 console.log('--- DEBUG VARIABLES ---');
 console.log('TOKEN existe:', !!TOKEN);
@@ -34,23 +32,22 @@ console.log('CLIENT_ID:', CLIENT_ID);
 console.log('GUILD_ID:', GUILD_ID);
 console.log('-----------------------');
 
-// Si algo falla, paramos aquí
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
     console.log('❌ ERROR: faltan variables de entorno');
     process.exit(1);
 }
 
-// ==========================
-// CLIENT
-// ==========================
+/* =========================
+   CLIENT
+========================= */
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]
 });
 
-// ==========================
-// CONFIG
-// ==========================
+/* =========================
+   CONFIG
+========================= */
 
 const STAFF_EVENTOS = '1435353402002374745';
 const STAFF_SUGERENCIAS = '1435353402002374745';
@@ -58,9 +55,9 @@ const STAFF_SUGERENCIAS = '1435353402002374745';
 const CATEGORIA_EVENTOS = '1505945637513068574';
 const CATEGORIA_SUGERENCIAS = '1505945637513068574';
 
-// ==========================
-// SLASH COMMANDS
-// ==========================
+/* =========================
+   SLASH COMMANDS
+========================= */
 
 const commands = [
     new SlashCommandBuilder()
@@ -69,9 +66,9 @@ const commands = [
         .toJSON()
 ];
 
-// ==========================
-// REST (REGISTRO COMANDOS)
-// ==========================
+/* =========================
+   REGISTER COMMANDS
+========================= */
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
@@ -90,17 +87,17 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
     }
 })();
 
-// ==========================
-// READY
-// ==========================
+/* =========================
+   READY
+========================= */
 
 client.once(Events.ClientReady, () => {
     console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
 
-// ==========================
-// INTERACCIONES
-// ==========================
+/* =========================
+   INTERACCIONES
+========================= */
 
 client.on(Events.InteractionCreate, async (interaction) => {
 
@@ -226,8 +223,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// ==========================
-// LOGIN
-// ==========================
+/* =========================
+   LOGIN
+========================= */
 
 client.login(TOKEN);

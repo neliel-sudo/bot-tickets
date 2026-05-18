@@ -49,11 +49,20 @@ const client = new Client({
    CONFIG
 ========================= */
 
+// ROL STAFF
 const STAFF_EVENTOS = '1435353402002374745';
 const STAFF_SUGERENCIAS = '1435353402002374745';
 
+// CATEGORÍAS
 const CATEGORIA_EVENTOS = '1505945637513068574';
 const CATEGORIA_SUGERENCIAS = '1505945637513068574';
+
+/* =========================
+   CONTADORES
+========================= */
+
+let contadorEventos = 1;
+let contadorSugerencias = 1;
 
 /* =========================
    SLASH COMMANDS
@@ -136,7 +145,7 @@ Selecciona el ticket que deseas abrir.
                     {
                         label: '🎈┊Eventos',
                         value: 'eventos',
-                        description: 'Soporte relacionado con eventos'
+                        description: 'Relacionado con eventos'
                     },
                     {
                         label: '📢┊Sugerencias',
@@ -180,8 +189,10 @@ Selecciona el ticket que deseas abrir.
 
         if (opcion === 'eventos') {
 
+            const nombreTicket = `eventos-${String(contadorEventos).padStart(4, '0')}`;
+
             canal = await interaction.guild.channels.create({
-                name: `🎈┊${interaction.user.username}`,
+                name: nombreTicket,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_EVENTOS,
 
@@ -207,6 +218,8 @@ Selecciona el ticket que deseas abrir.
                 ]
             });
 
+            contadorEventos++;
+
             ticketEmbed = new EmbedBuilder()
                 .setColor('#ff69b4')
                 .setTitle('🎈┊Ticket de Eventos')
@@ -229,8 +242,10 @@ Este ticket es para:
 
         if (opcion === 'sugerencias') {
 
+            const nombreTicket = `sugerencias-${String(contadorSugerencias).padStart(4, '0')}`;
+
             canal = await interaction.guild.channels.create({
-                name: `📢┊${interaction.user.username}`,
+                name: nombreTicket,
                 type: ChannelType.GuildText,
                 parent: CATEGORIA_SUGERENCIAS,
 
@@ -255,6 +270,8 @@ Este ticket es para:
                     }
                 ]
             });
+
+            contadorSugerencias++;
 
             ticketEmbed = new EmbedBuilder()
                 .setColor('#00b0f4')
@@ -291,22 +308,93 @@ Este ticket es para:
     }
 
     /* =========================
-       BOTÓN CERRAR
+       BOTONES
     ========================= */
 
     if (interaction.isButton()) {
 
+        /* =========================
+           BOTÓN CERRAR
+        ========================= */
+
         if (interaction.customId === 'cerrar') {
 
-            await interaction.reply({
-                content: '🔒┊Cerrando ticket en 3 segundos...'
+            const confirmar = new ButtonBuilder()
+                .setCustomId('confirmar_cierre')
+                .setLabel('✅ Confirmar')
+                .setStyle(ButtonStyle.Danger);
+
+            const cancelar = new ButtonBuilder()
+                .setCustomId('cancelar_cierre')
+                .setLabel('❌ Cancelar')
+                .setStyle(ButtonStyle.Secondary);
+
+            const row = new ActionRowBuilder()
+                .addComponents(confirmar, cancelar);
+
+            return interaction.reply({
+                content: '¿Seguro que deseas cerrar el ticket?',
+                components: [row],
+                ephemeral: true
+            });
+        }
+
+        /* =========================
+           CANCELAR
+        ========================= */
+
+        if (interaction.customId === 'cancelar_cierre') {
+
+            return interaction.update({
+                content: '✅ Acción cancelada.',
+                components: []
+            });
+        }
+
+        /* =========================
+           CONFIRMAR CIERRE
+        ========================= */
+
+        if (interaction.customId === 'confirmar_cierre') {
+
+            const miembro = interaction.member;
+
+            const esStaff =
+                miembro.roles.cache.has(STAFF_EVENTOS) ||
+                miembro.roles.cache.has(STAFF_SUGERENCIAS);
+
+            /* =========================
+               STAFF -> ELIMINA
+            ========================= */
+
+            if (esStaff) {
+
+                await interaction.update({
+                    content: '🔒 Ticket eliminado.',
+                    components: []
+                });
+
+                setTimeout(() => {
+
+                    interaction.channel.delete().catch(() => {});
+
+                }, 3000);
+
+                return;
+            }
+
+            /* =========================
+               USUARIO -> OCULTAR
+            ========================= */
+
+            await interaction.channel.permissionOverwrites.edit(interaction.user.id, {
+                ViewChannel: false
             });
 
-            setTimeout(() => {
-
-                interaction.channel.delete().catch(() => {});
-
-            }, 3000);
+            return interaction.update({
+                content: '🔒 Has cerrado tu ticket.',
+                components: []
+            });
         }
     }
 });
